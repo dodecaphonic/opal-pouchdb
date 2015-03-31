@@ -3,6 +3,7 @@ if RUBY_ENGINE == "opal"
   require "promise"
 
   require "opal/pouchdb/database"
+  require "opal/pouchdb/all_documents"
 else
   require "opal"
   require "opal/pouchdb/version"

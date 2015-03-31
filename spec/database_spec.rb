@@ -16,6 +16,10 @@ describe PouchDB::Database do
     }
   }
 
+  let(:sorted_ids) {
+    docs_with_ids.map { |d| d[:_id] }.sort
+  }
+
   describe "#initialize" do
     it "requires a name" do
       expect { PouchDB::Database.new }.to raise_error(KeyError)
@@ -106,8 +110,6 @@ describe PouchDB::Database do
 
     async "keeps passed-in ids if Documents have them" do
       with_new_database do |db|
-        sorted_ids = docs_with_ids.map { |d| d[:_id] }.sort
-
         db.bulk_docs(docs_with_ids).then do |response|
           run_async do
             expect(response.map(&:id).sort).to eq(sorted_ids)
@@ -182,6 +184,33 @@ describe PouchDB::Database do
         end.then do |document|
           run_async do
             expect(document.contents.foo.bar.baz).to eq(1)
+          end
+        end
+      end
+    end
+  end
+
+  describe "#all_docs" do
+    async "fetches every Document by default" do
+      with_new_database do |db|
+        db.bulk_docs(docs_with_ids).then do
+          db.all_docs
+        end.then do |response|
+          run_async do
+            expect(response.size).to eq(sorted_ids.size)
+            expect(response.map(&:id).sort).to eq(sorted_ids)
+          end
+        end
+      end
+    end
+
+    async "passes options along" do
+      with_new_database do |db|
+        db.bulk_docs(docs_with_ids).then do
+          db.all_docs(include_docs: true)
+        end.then do |response|
+          run_async do
+            expect(response.first.doc.name).not_to be_empty
           end
         end
       end

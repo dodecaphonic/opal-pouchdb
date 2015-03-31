@@ -3,6 +3,7 @@ module PouchDB
     include Native
 
     DEFAULT_HANDLER = ->(response) { Native(response) }
+    ARRAY_HANDLER = ->(response) { response.map { |o| Native(o) } }
 
     def initialize(options = {})
       @name = options.fetch(:name)
@@ -51,8 +52,13 @@ module PouchDB
     end
 
     def bulk_docs(docs, options = {})
-      as_opal_promise(`#{@native}.bulkDocs(#{docs.to_n}, #{options.to_n})`) { |resp|
-        resp.map { |o| Native(o) }
+      as_opal_promise(`#{@native}.bulkDocs(#{docs.to_n}, #{options.to_n})`,
+                      &ARRAY_HANDLER)
+    end
+
+    def all_docs(options = {})
+      as_opal_promise(`#{@native}.allDocs(#{options.to_n})`) { |response|
+        AllDocuments.new(response)
       }
     end
 
