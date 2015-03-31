@@ -14,15 +14,16 @@ module PouchDB
       `#{@results}.total_rows`
     end
 
-    alias_method :size, :total_rows
-    alias_method :length, :total_rows
-    alias_method :count, :total_rows
+    def size
+      `#{@results}.rows.length`
+    end
+
+    alias_method :count, :size
+    alias_method :length, :size
 
     def each
-      rows = `#{@results}.rows`
-
-      rows.each do |r|
-        yield Native(r)
+      `#{@results}.rows`.each do |r|
+        yield Row.new(r)
       end
     end
   end

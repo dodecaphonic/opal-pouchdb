@@ -4,6 +4,7 @@ if RUBY_ENGINE == "opal"
 
   require "opal/pouchdb/database"
   require "opal/pouchdb/all_documents"
+  require "opal/pouchdb/row"
 else
   require "opal"
   require "opal/pouchdb/version"

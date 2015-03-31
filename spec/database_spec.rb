@@ -195,22 +195,39 @@ describe PouchDB::Database do
       with_new_database do |db|
         db.bulk_docs(docs_with_ids).then do
           db.all_docs
-        end.then do |response|
+        end.then do |rows|
           run_async do
-            expect(response.size).to eq(sorted_ids.size)
-            expect(response.map(&:id).sort).to eq(sorted_ids)
+            expect(rows.size).to eq(sorted_ids.size)
+            expect(rows.map(&:id).sort).to eq(sorted_ids)
+            expect(rows.first.document).to eq({})
           end
         end
       end
     end
 
-    async "passes options along" do
-      with_new_database do |db|
-        db.bulk_docs(docs_with_ids).then do
-          db.all_docs(include_docs: true)
-        end.then do |response|
-          run_async do
-            expect(response.first.doc.name).not_to be_empty
+    # dodecaphonic: This is non-exhaustive. I just want to check if
+    # passing options actually goes through.
+    describe "passing options along" do
+      async "allows for full Documents to come with a Row" do
+        with_new_database do |db|
+          db.bulk_docs(docs_with_ids).then do
+            db.all_docs(include_docs: true)
+          end.then do |rows|
+            run_async do
+              expect(rows.first.document["name"]).not_to be_empty
+            end
+          end
+        end
+      end
+
+      async "can limit the number of Rows to return" do
+        with_new_database do |db|
+          db.bulk_docs(docs_with_ids).then do
+            db.all_docs(key: "banana").then do |rows|
+              run_async do
+                expect(rows.size).to eq(1)
+              end
+            end
           end
         end
       end
