@@ -2,6 +2,8 @@ module PouchDB
   class Database
     include Native
 
+    DEFAULT_HANDLER = ->(response) { Native(response) }
+
     def initialize(options = {})
       @name = options.fetch(:name)
       super `new PouchDB(#{options.to_n})`
@@ -48,16 +50,22 @@ module PouchDB
       as_opal_promise(`#{@native}.get(doc_id, #{options.to_n})`)
     end
 
+    def bulk_docs(docs, options = {})
+      as_opal_promise(`#{@native}.bulkDocs(#{docs.to_n}, #{options.to_n})`) { |resp|
+        resp.map { |o| Native(o) }
+      }
+    end
+
     private
 
-    def as_opal_promise(pouch_promise_n)
+    def as_opal_promise(pouch_promise_n, &response_handler)
       pouch_promise = Native(pouch_promise_n)
-
-      promise = Promise.new
+      handler       = response_handler || DEFAULT_HANDLER
+      promise       = Promise.new
 
       pouch_promise
-        .then(-> (response) { promise.resolve(Native(response)) })
-        .catch(-> (error) { promise.reject(error) })
+        .then(-> (response) do promise.resolve(handler.call(response)) end)
+        .catch(-> (error) do promise.reject(error) end)
 
       promise
     end

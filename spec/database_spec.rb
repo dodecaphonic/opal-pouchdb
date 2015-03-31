@@ -80,6 +80,63 @@ describe PouchDB::Database do
     end
   end
 
+  describe "#bulk_docs" do
+    let(:docs) {
+      [
+        { name: "Banana", color: "yellow" },
+        { name: "Apple", color: "red" },
+        { name: "Green Apple", color: "green" }
+      ]
+    }
+
+    let(:docs_with_ids) {
+      docs.map { |d|
+        d.merge(_id: d[:name].downcase.gsub(/\s+/, "-"))
+      }
+    }
+
+    async "generates ids if Documents don't have them" do
+      with_new_database do |db|
+        db.bulk_docs(docs).then do |response|
+          run_async do
+            expect(response.size).to eq(3)
+            expect(response.all?(&:ok)).to be(true)
+            expect(response.map(&:id).none?(&:empty?)).to be(true)
+          end
+        end
+      end
+    end
+
+    async "keeps passed-in ids if Documents have them" do
+      with_new_database do |db|
+        sorted_ids = docs_with_ids.map { |d| d[:_id] }.sort
+
+        db.bulk_docs(docs_with_ids).then do |response|
+          run_async do
+            expect(response.map(&:id).sort).to eq(sorted_ids)
+          end
+        end
+      end
+    end
+
+    async "mixes errors with successes (non-transactional)" do
+      with_new_database do |db|
+        db.put(docs_with_ids.first).then do
+          db.bulk_docs(docs_with_ids)
+        end.then do |response|
+          run_async do
+            errors = response.select { |r| r.is_a?(Exception) }
+            ok     = response - errors
+
+            expect(ok.size).to eq(2)
+            expect(errors.size).to eq(1)
+            expect(errors.first.message).to match(/conflict/)
+          end
+        end
+      end
+    end
+  end
+
   describe "#get" do
     async "calls the returned Promise's success handler with a Document" do
       with_new_database do |db|
