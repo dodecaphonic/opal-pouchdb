@@ -2,8 +2,14 @@ module PouchDB
   class Database
     include Native
 
-    DEFAULT_HANDLER = ->(response) { Native(response) }
-    ARRAY_HANDLER = ->(response) { response.map { |o| Native(o) } }
+    DEFAULT_HANDLER = ->(response) {
+      if (maybe_exception = Native(response)).is_a?(Exception)
+        maybe_exception
+      else
+        Hash.new(response)
+      end
+    }
+    ARRAY_HANDLER = ->(response) { response.map { |o| DEFAULT_HANDLER.call(o) } }
 
     def initialize(options = {})
       @name = options.fetch(:name)
