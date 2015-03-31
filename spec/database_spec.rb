@@ -65,6 +65,21 @@ describe PouchDB::Database do
     end
   end
 
+  describe "#post" do
+    async "posting new Document generates an id" do
+      with_new_database do |db|
+        promise = db.post(contents: "Fudge")
+
+        promise.then do |response|
+          run_async do
+            expect(response.rev).not_to be_nil
+            expect(response.id).not_to be_nil
+          end
+        end
+      end
+    end
+  end
+
   describe "#get" do
     async "calls the returned Promise's success handler with a Document" do
       with_new_database do |db|
@@ -95,7 +110,7 @@ describe PouchDB::Database do
     end
   end
 
-  describe "removing Documents" do
+  describe "#remove" do
     let(:doc) {
       { _id: "new-id-new-life", contents: "Pears" }
     }

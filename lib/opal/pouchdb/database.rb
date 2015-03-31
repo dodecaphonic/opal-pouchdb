@@ -40,6 +40,10 @@ module PouchDB
       as_opal_promise(`#{@native}.put(#{doc.to_n}, doc_id, doc_rev, #{options.to_n})`)
     end
 
+    def post(doc, options = {})
+      as_opal_promise(`#{@native}.post(#{doc.to_n}, #{options.to_n})`)
+    end
+
     def get(doc_id, options = {})
       as_opal_promise(`#{@native}.get(doc_id, #{options.to_n})`)
     end
