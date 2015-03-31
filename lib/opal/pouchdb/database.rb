@@ -5,9 +5,6 @@ module PouchDB
     def initialize(options = {})
       @name = options.fetch(:name)
       super `new PouchDB(#{options.to_n})`
-    rescue => e
-      $global.console.log "Failing here with", e
-      fail e
     end
 
     attr_reader :name
