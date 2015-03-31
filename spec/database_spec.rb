@@ -33,7 +33,7 @@ describe PouchDB::Database do
       with_new_database do |db|
         db.destroy.then do |response|
           run_async do
-            expect(response.ok).to be(true)
+            expect(response["ok"]).to be(true)
           end
         end
       end
@@ -48,8 +48,8 @@ describe PouchDB::Database do
         promise.then do |response|
           run_async do
             expect(response).not_to be_nil
-            expect(response.rev).not_to be_nil
-            expect(response.id).to eq("banana")
+            expect(response["rev"]).not_to be_nil
+            expect(response["id"]).to eq("banana")
           end
         end
       end
@@ -60,9 +60,9 @@ describe PouchDB::Database do
         db.put(docs_with_ids.first).then do |created|
           update = { name: "Bananananas" }
 
-          db.put(update, id: created.id, rev: created.rev).then do |updated|
+          db.put(update, id: created["id"], rev: created["rev"]).then do |updated|
             run_async do
-              expect(updated.rev).not_to eq(created.rev)
+              expect(updated["rev"]).not_to eq(created["rev"])
             end
           end
         end
@@ -87,8 +87,8 @@ describe PouchDB::Database do
 
         promise.then do |response|
           run_async do
-            expect(response.rev).not_to be_nil
-            expect(response.id).not_to be_nil
+            expect(response["rev"]).not_to be_nil
+            expect(response["id"]).not_to be_nil
           end
         end
       end
@@ -101,8 +101,8 @@ describe PouchDB::Database do
         db.bulk_docs(docs).then do |response|
           run_async do
             expect(response.size).to eq(3)
-            expect(response.all?(&:ok)).to be(true)
-            expect(response.map(&:id).none?(&:empty?)).to be(true)
+            expect(response.all? { |r| r["ok"] }).to be(true)
+            expect(response.map { |r| r["id"] }.none?(&:empty?)).to be(true)
           end
         end
       end
@@ -112,7 +112,7 @@ describe PouchDB::Database do
       with_new_database do |db|
         db.bulk_docs(docs_with_ids).then do |response|
           run_async do
-            expect(response.map(&:id).sort).to eq(sorted_ids)
+            expect(response.map { |r| r["id"] }.sort).to eq(sorted_ids)
           end
         end
       end
@@ -124,8 +124,8 @@ describe PouchDB::Database do
 
         db.bulk_docs(docs_with_ids).then do |created|
           new_versions = created.map { |r|
-            d = by_id[r.id]
-            d.merge(_id: r.id, _rev: r.rev, name: d[:name].reverse)
+            d = by_id[r["id"]]
+            d.merge(_id: r["id"], _rev: r["rev"], name: d[:name].reverse)
           }
 
           created_by_id = Hash[created.map { |c| [c[:id], c] }]
@@ -133,8 +133,8 @@ describe PouchDB::Database do
           db.bulk_docs(new_versions).then do |updated|
             run_async do
               updated.each do |ud|
-                cd = created_by_id[ud.id]
-                expect(ud[:rev]).not_to eq(cd[:rev])
+                cd = created_by_id[ud["id"]]
+                expect(ud["rev"]).not_to eq(cd["rev"])
               end
             end
           end
@@ -167,8 +167,8 @@ describe PouchDB::Database do
           db.get("magic_object")
         end.then do |doc|
           run_async do
-            expect(doc._id).to eq("magic_object")
-            expect(doc.contents).to eq("It's Magic")
+            expect(doc["_id"]).to eq("magic_object")
+            expect(doc["contents"]).to eq("It's Magic")
           end
         end
       end
@@ -183,7 +183,7 @@ describe PouchDB::Database do
           db.get("nasty_nested")
         end.then do |document|
           run_async do
-            expect(document.contents.foo.bar.baz).to eq(1)
+            expect(document["contents"]["foo"]["bar"]["baz"]).to eq(1)
           end
         end
       end
@@ -242,13 +242,13 @@ describe PouchDB::Database do
         with_new_database do |db|
           db.put(doc).then do |created|
             run_async do
-              to_remove = { _id: created.id, _rev: created.rev }
+              to_remove = { _id: created["id"], _rev: created["rev"] }
               db.remove(doc: to_remove)
             end
           end
         end.then do |removed|
           run_async do
-            expect(removed.ok).to be(true)
+            expect(removed["ok"]).to be(true)
           end
         end
       end
@@ -257,7 +257,7 @@ describe PouchDB::Database do
         with_new_database(false) do |db|
           db.put(doc).then do |created|
             run_async do
-              to_remove = { _rev: created.rev }
+              to_remove = { _rev: created["rev"] }
               db.remove(doc: to_remove)
             end
           end
@@ -272,7 +272,7 @@ describe PouchDB::Database do
         with_new_database(false) do |db|
           db.put(doc).then do |created|
             run_async do
-              to_remove = { _id: created.id }
+              to_remove = { _id: created["id"] }
               db.remove(doc: to_remove)
             end
           end
@@ -289,7 +289,7 @@ describe PouchDB::Database do
         with_new_database do |db|
           db.put(doc).then do |created|
             run_async do
-              db.remove(doc_id: created.id, doc_rev: created.rev)
+              db.remove(doc_id: created["id"], doc_rev: created["rev"])
             end
           end
         end.then do |removed|
@@ -303,7 +303,7 @@ describe PouchDB::Database do
         with_new_database(false) do |db|
           db.put(doc).then do |created|
             run_async do
-              db.remove(doc_rev: created.rev)
+              db.remove(doc_rev: created["rev"])
             end
           end
         end.fail do |error|
@@ -317,7 +317,7 @@ describe PouchDB::Database do
         with_new_database(false) do |db|
           db.put(doc).then do |created|
             run_async do
-              db.remove(doc_id: created.id)
+              db.remove(doc_id: created["id"])
             end
           end
         end.fail do |error|
