@@ -116,6 +116,30 @@ describe PouchDB::Database do
       end
     end
 
+    async "updates sets of Documents" do
+      with_new_database do |db|
+        by_id = Hash[docs_with_ids.map { |d| [d[:_id], d] }]
+
+        db.bulk_docs(docs_with_ids).then do |created|
+          new_versions = created.map { |r|
+            d = by_id[r.id]
+            d.merge(_id: r.id, _rev: r.rev, name: d[:name].reverse)
+          }
+
+          created_by_id = Hash[created.map { |c| [c[:id], c] }]
+
+          db.bulk_docs(new_versions).then do |updated|
+            run_async do
+              updated.each do |ud|
+                cd = created_by_id[ud.id]
+                expect(ud[:rev]).not_to eq(cd[:rev])
+              end
+            end
+          end
+        end
+      end
+    end
+
     async "mixes errors with successes (non-transactional)" do
       with_new_database do |db|
         db.put(docs_with_ids.first).then do
