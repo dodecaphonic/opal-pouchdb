@@ -22,7 +22,37 @@ module PouchDB
       promise
     end
 
-    def put(doc, doc_id = nil, doc_rev = nil, options = nil)
+    def remove(args = {})
+      doc     = args[:doc]
+      doc_id  = args[:doc_id]
+      doc_rev = args[:doc_rev]
+      options = args[:options]
+
+      promise = Promise.new
+
+      %x{
+        var pouchPromise;
+        if (doc) {
+          pouchPromise = #{@native}.remove(#{doc.to_n}, #{options.to_n})
+        } else {
+          pouchPromise = #{@native}.remove(doc_id, doc_rev, #{options.to_n})
+        }
+
+        pouchPromise.then(function(response) {
+          #{promise.resolve(Native(`response`))}
+        }).catch(function(error) {
+          #{promise.reject(`error`)}
+        })
+      }
+
+      promise
+    end
+
+    def put(doc, args = {})
+      doc_id  = args[:id]
+      doc_rev = args[:rev]
+      options = args[:options]
+
       promise = Promise.new
 
       %x{

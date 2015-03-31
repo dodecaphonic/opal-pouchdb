@@ -1,4 +1,5 @@
 require "spec_helper"
+require "securerandom"
 
 describe PouchDB::Database do
   describe "#initialize" do
@@ -26,15 +27,28 @@ describe PouchDB::Database do
       { _id: "foo", contents: "Baz" }
     }
 
-    async "calls the returned Promise's success handler" do
+    async "creating a new Document calls the returned Promise's success handler" do
       with_new_database do |db|
         promise = db.put(_id: "bar", contents: "Fudge")
 
         promise.then do |response|
           run_async do
             expect(response).not_to be_nil
-            expect(response[:rev]).not_to be_nil
-            expect(response[:id]).to eq("bar")
+            expect(response.rev).not_to be_nil
+            expect(response.id).to eq("bar")
+          end
+        end
+      end
+    end
+
+    async "updating an existing Document calls the returned Promise's success handler" do
+      with_new_database do |db|
+        db.put(_id: "awesome-unique", contents: "Chocolate").then do |created|
+          doc = { contents: "Bananas" }
+          db.put(doc, id: created.id, rev: created.rev).then do |updated|
+            run_async do
+              expect(updated.rev).not_to eq(created.rev)
+            end
           end
         end
       end
@@ -58,8 +72,8 @@ describe PouchDB::Database do
           db.get("magic_object")
         end.then do |doc|
           run_async do
-            expect(doc[:_id]).to eq("magic_object")
-            expect(doc[:contents]).to eq("It's Magic")
+            expect(doc._id).to eq("magic_object")
+            expect(doc.contents).to eq("It's Magic")
           end
         end
       end
@@ -81,11 +95,108 @@ describe PouchDB::Database do
     end
   end
 
-  def with_new_database(add_failure = true)
-    database_name = "test_opal_pouchdb_database-#{Time.now.to_i}"
+  describe "removing Documents" do
+    let(:doc) {
+      { _id: "new-id-new-life", contents: "Pears" }
+    }
+
+    describe "with a Document containing an _id and _rev" do
+      async "works correctly" do
+        with_new_database do |db|
+          db.put(doc).then do |created|
+            run_async do
+              to_remove = { _id: created.id, _rev: created.rev }
+              db.remove(doc: to_remove)
+            end
+          end
+        end.then do |removed|
+          run_async do
+            expect(removed.ok).to be(true)
+          end
+        end
+      end
+
+      async "fails if _id is missing" do
+        with_new_database(false) do |db|
+          db.put(doc).then do |created|
+            run_async do
+              to_remove = { _rev: created.rev }
+              db.remove(doc: to_remove)
+            end
+          end
+        end.fail do |error|
+          run_async do
+            expect(error.message).to match(/missing/)
+          end
+        end
+      end
+
+      async "fails if _rev is missing" do
+        with_new_database(false) do |db|
+          db.put(doc).then do |created|
+            run_async do
+              to_remove = { _id: created.id }
+              db.remove(doc: to_remove)
+            end
+          end
+        end.fail do |error|
+          run_async do
+            expect(error.message).to match(/missing/)
+          end
+        end
+      end
+    end
+
+    describe "passing its _id and _rev explicitly" do
+      async "works correctly" do
+        with_new_database do |db|
+          db.put(doc).then do |created|
+            run_async do
+              db.remove(doc_id: created.id, doc_rev: created.rev)
+            end
+          end
+        end.then do |removed|
+          run_async do
+            expect(removed.ok).to be(true)
+          end
+        end
+      end
+
+      async "fails if _id is missing" do
+        with_new_database(false) do |db|
+          db.put(doc).then do |created|
+            run_async do
+              db.remove(doc_rev: created.rev)
+            end
+          end
+        end.fail do |error|
+          run_async do
+            expect(error.message).to match(/missing/)
+          end
+        end
+      end
+
+      async "fails if _rev is missing" do
+        with_new_database(false) do |db|
+          db.put(doc).then do |created|
+            run_async do
+              db.remove(doc_id: created.id)
+            end
+          end
+        end.fail do |error|
+          run_async do
+            expect(error.message).to match(/missing/)
+          end
+        end
+      end
+    end
+  end
+
+  def with_new_database(add_failure_handler = true)
+    database_name = "test_opal_pouchdb_database-#{rand(1337)}"
     promise = yield PouchDB::Database.new(name: database_name)
 
-    if add_failure
+    if add_failure_handler
       promise = promise.fail do |error|
         run_async do
           fail error
