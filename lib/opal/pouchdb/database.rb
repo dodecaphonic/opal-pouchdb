@@ -9,17 +9,9 @@ module PouchDB
 
     attr_reader :name
 
+    # TODO: Pass options on.
     def destroy(options = {})
-      promise = Promise.new
-      %x{
-        #{@native}.destroy().then(function(response) {
-          #{promise.resolve(Native(`response`))}
-        }).catch(function(error) {
-          #{promise.reject(`error`)}
-        })
-      }
-
-      promise
+      as_opal_promise(`#{@native}.destroy()`)
     end
 
     def remove(args = {})
@@ -28,8 +20,6 @@ module PouchDB
       doc_rev = args[:doc_rev]
       options = args[:options]
 
-      promise = Promise.new
-
       %x{
         var pouchPromise;
         if (doc) {
@@ -37,15 +27,9 @@ module PouchDB
         } else {
           pouchPromise = #{@native}.remove(doc_id, doc_rev, #{options.to_n})
         }
-
-        pouchPromise.then(function(response) {
-          #{promise.resolve(Native(`response`))}
-        }).catch(function(error) {
-          #{promise.reject(`error`)}
-        })
       }
 
-      promise
+      as_opal_promise(`pouchPromise`)
     end
 
     def put(doc, args = {})
@@ -53,29 +37,23 @@ module PouchDB
       doc_rev = args[:rev]
       options = args[:options]
 
-      promise = Promise.new
-
-      %x{
-        #{@native}.put(#{doc.to_n}, doc_id, doc_rev, #{options.to_n}).then(function(response) {
-          #{promise.resolve(Native(`response`))}
-        }).catch(function(error)  {
-          #{promise.reject(`error`)}
-        })
-      }
-
-      promise
+      as_opal_promise(`#{@native}.put(#{doc.to_n}, doc_id, doc_rev, #{options.to_n})`)
     end
 
     def get(doc_id, options = {})
+      as_opal_promise(`#{@native}.get(doc_id, #{options.to_n})`)
+    end
+
+    private
+
+    def as_opal_promise(pouch_promise_n)
+      pouch_promise = Native(pouch_promise_n)
+
       promise = Promise.new
 
-      %x{
-        #{@native}.get(doc_id, #{options.to_n}).then(function(response) {
-          #{promise.resolve(Native(`response`))}
-        }).catch(function(error)  {
-          #{promise.reject(`error`)}
-        })
-      }
+      pouch_promise
+        .then(-> (response) { promise.resolve(Native(response)) })
+        .catch(-> (error) { promise.reject(error) })
 
       promise
     end
