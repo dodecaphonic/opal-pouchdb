@@ -2,6 +2,20 @@ require "spec_helper"
 require "securerandom"
 
 describe PouchDB::Database do
+  let(:docs) {
+    [
+      { name: "Banana", color: "yellow" },
+      { name: "Apple", color: "red" },
+      { name: "Green Apple", color: "green" }
+    ]
+  }
+
+  let(:docs_with_ids) {
+    docs.map { |d|
+      d.merge(_id: d[:name].downcase.gsub(/\s+/, "-"))
+    }
+  }
+
   describe "#initialize" do
     it "requires a name" do
       expect { PouchDB::Database.new }.to raise_error(KeyError)
@@ -23,19 +37,15 @@ describe PouchDB::Database do
   end
 
   describe "#put" do
-    let(:default_object) {
-      { _id: "foo", contents: "Baz" }
-    }
-
     async "creating a new Document calls the returned Promise's success handler" do
       with_new_database do |db|
-        promise = db.put(_id: "bar", contents: "Fudge")
+        promise = db.put(docs_with_ids.first)
 
         promise.then do |response|
           run_async do
             expect(response).not_to be_nil
             expect(response.rev).not_to be_nil
-            expect(response.id).to eq("bar")
+            expect(response.id).to eq("banana")
           end
         end
       end
@@ -43,9 +53,10 @@ describe PouchDB::Database do
 
     async "updating an existing Document calls the returned Promise's success handler" do
       with_new_database do |db|
-        db.put(_id: "awesome-unique", contents: "Chocolate").then do |created|
-          doc = { contents: "Bananas" }
-          db.put(doc, id: created.id, rev: created.rev).then do |updated|
+        db.put(docs_with_ids.first).then do |created|
+          update = { name: "Bananananas" }
+
+          db.put(update, id: created.id, rev: created.rev).then do |updated|
             run_async do
               expect(updated.rev).not_to eq(created.rev)
             end
@@ -56,7 +67,7 @@ describe PouchDB::Database do
 
     async "calls the returned Promise's error handler" do
       with_new_database(false) do |db|
-        db.put(contents: "No id means bad news").fail do |error|
+        db.put(docs.first).fail do |error|
           run_async do
             expect(error.message).to match(/_id is required/)
           end
@@ -68,7 +79,7 @@ describe PouchDB::Database do
   describe "#post" do
     async "posting new Document generates an id" do
       with_new_database do |db|
-        promise = db.post(contents: "Fudge")
+        promise = db.post(docs.first)
 
         promise.then do |response|
           run_async do
@@ -81,20 +92,6 @@ describe PouchDB::Database do
   end
 
   describe "#bulk_docs" do
-    let(:docs) {
-      [
-        { name: "Banana", color: "yellow" },
-        { name: "Apple", color: "red" },
-        { name: "Green Apple", color: "green" }
-      ]
-    }
-
-    let(:docs_with_ids) {
-      docs.map { |d|
-        d.merge(_id: d[:name].downcase.gsub(/\s+/, "-"))
-      }
-    }
-
     async "generates ids if Documents don't have them" do
       with_new_database do |db|
         db.bulk_docs(docs).then do |response|
@@ -168,9 +165,7 @@ describe PouchDB::Database do
   end
 
   describe "#remove" do
-    let(:doc) {
-      { _id: "new-id-new-life", contents: "Pears" }
-    }
+    let(:doc) { docs_with_ids.first }
 
     describe "with a Document containing an _id and _rev" do
       async "works correctly" do
