@@ -29,7 +29,6 @@ Every single CRUD operation is supported right now:
 
 ## TODO
 
-- Listening to changes
 - Sync
 - Replication
 - Attachments

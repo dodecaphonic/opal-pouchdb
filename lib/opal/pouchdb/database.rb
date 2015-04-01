@@ -1,15 +1,7 @@
 module PouchDB
   class Database
     include Native
-
-    DEFAULT_HANDLER = ->(response) {
-      if (maybe_exception = Native(response)).is_a?(Exception)
-        maybe_exception
-      else
-        Hash.new(response)
-      end
-    }
-    ARRAY_HANDLER = ->(response) { response.map { |o| DEFAULT_HANDLER.call(o) } }
+    include Conversion
 
     def initialize(options = {})
       @name = options.fetch(:name)
@@ -59,7 +51,7 @@ module PouchDB
 
     def bulk_docs(docs, options = {})
       as_opal_promise(`#{@native}.bulkDocs(#{docs.to_n}, #{options.to_n})`,
-                      &ARRAY_HANDLER)
+                      &ARRAY_CONVERSION)
     end
 
     def all_docs(options = {})
@@ -68,18 +60,8 @@ module PouchDB
       }
     end
 
-    private
-
-    def as_opal_promise(pouch_promise_n, &response_handler)
-      pouch_promise = Native(pouch_promise_n)
-      handler       = response_handler || DEFAULT_HANDLER
-      promise       = Promise.new
-
-      pouch_promise
-        .then(-> (response) do promise.resolve(handler.call(response)) end)
-        .catch(-> (error) do promise.reject(error) end)
-
-      promise
+    def changes(options = {})
+      EventEmitter.new(@native, `#{@native}.changes(#{options.to_n})`)
     end
   end
 end
