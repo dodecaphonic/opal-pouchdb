@@ -1,15 +1,4 @@
-if RUBY_ENGINE == "opal"
-  require "native"
-  require "promise"
+require "opal"
+require "opal/pouchdb/version"
 
-  require "opal/pouchdb/conversion"
-  require "opal/pouchdb/database"
-  require "opal/pouchdb/all_documents"
-  require "opal/pouchdb/row"
-  require "opal/pouchdb/event_emitter"
-else
-  require "opal"
-  require "opal/pouchdb/version"
-
-  Opal.append_path File.expand_path('../..', __FILE__).untaint
-end
+Opal.append_path File.expand_path('../../../opal', __FILE__)
