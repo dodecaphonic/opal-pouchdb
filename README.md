@@ -1,6 +1,7 @@
 # opal-pouchdb: A PouchDB Wrapper for Opal
 
 [![Build Status](https://travis-ci.org/dodecaphonic/opal-pouchdb.svg?branch=master)](https://travis-ci.org/dodecaphonic/opal-pouchdb)
+[![Code Climate](https://codeclimate.com/github/dodecaphonic/opal-pouchdb/badges/gpa.svg)](https://codeclimate.com/github/dodecaphonic/opal-pouchdb)
 
 opal-pouchdb allows [PouchDB][pouchdb] databases to be used with a nice Ruby API.
 
