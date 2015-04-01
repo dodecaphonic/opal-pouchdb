@@ -2,9 +2,11 @@ if RUBY_ENGINE == "opal"
   require "native"
   require "promise"
 
+  require "opal/pouchdb/conversion"
   require "opal/pouchdb/database"
   require "opal/pouchdb/all_documents"
   require "opal/pouchdb/row"
+  require "opal/pouchdb/event_emitter"
 else
   require "opal"
   require "opal/pouchdb/version"
