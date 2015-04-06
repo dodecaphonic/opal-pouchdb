@@ -30,8 +30,6 @@ Every single CRUD operation is supported right now:
 
 ## TODO
 
-- Sync
-- Replication
 - Attachments
 - Querying
 - Views

@@ -252,7 +252,15 @@ module PouchDB
     #   likely you won't need this unless you are writing a replicator.
     # @return [EventEmitter]
     def changes(options = {})
-      EventEmitter.new(@native, `#{@native}.changes(#{options.to_n})`)
+      EventEmitter.new(`#{@native}.changes(#{options.to_n})`)
+    end
+
+    def replicate
+      Replication.new(@native)
+    end
+
+    def sync(other)
+      EventEmitter.new(`#{@native}.sync(#{database_as_string(other)})`)
     end
   end
 end

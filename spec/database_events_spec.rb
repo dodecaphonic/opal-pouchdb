@@ -78,10 +78,4 @@ describe "PouchDB::Database#changes" do
       end
     end
   end
-
-  def delayed(delay_by, &blk)
-    promise = Promise.new
-    $global.setTimeout(-> { blk.call(promise) }, delay_by * 1000)
-    promise
-  end
 end

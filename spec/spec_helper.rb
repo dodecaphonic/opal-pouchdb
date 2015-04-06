@@ -24,3 +24,9 @@ def destroy_database(name)
       db.destroy()
     }
 end
+
+def delayed(delay_by, &blk)
+  promise = Promise.new
+  $global.setTimeout(-> { blk.call(promise) }, delay_by * 1000)
+  promise
+end

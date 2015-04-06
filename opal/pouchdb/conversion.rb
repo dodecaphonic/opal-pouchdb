@@ -20,5 +20,9 @@ module PouchDB
 
       promise
     end
+
+    def database_as_string(db)
+      db.is_a?(Database) ? db.name : db
+    end
   end
 end

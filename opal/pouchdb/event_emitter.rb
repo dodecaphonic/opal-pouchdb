@@ -2,8 +2,7 @@ module PouchDB
   class EventEmitter
     include Conversion
 
-    def initialize(native_db, stream)
-      @native_db = native_db
+    def initialize(stream)
       @native    = stream
     end
 
@@ -13,6 +12,8 @@ module PouchDB
           #{blk.call(OBJECT_CONVERSION.call(`change`))}
         })
       }
+
+      self
     end
 
     def then
