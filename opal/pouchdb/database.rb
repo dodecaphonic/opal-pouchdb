@@ -201,7 +201,7 @@ module PouchDB
 
     # A list of changes made to documents in the database, in the order they
     # were made. It returns an object with the method `cancel()`, which you call
-    # if you don’t want to listen to new changes anymore.
+    # if you don't want to listen to new changes anymore.
     #
     # It is an EventEmitter and will emit a 'change' event on each document
     # change, a 'complete' event when all the changes have been processed, and
