@@ -56,7 +56,7 @@ module PouchDB
       super `new PouchDB(#{options.to_n})`
     end
 
-    attr_reader :name
+    attr_reader :name, :native
 
     # Deletes the database. Be aware this will not affect replicas.
     #
@@ -261,6 +261,13 @@ module PouchDB
 
     def sync(other)
       EventEmitter.new(`#{@native}.sync(#{database_as_string(other)})`)
+    end
+
+    def query(fn, options = {})
+      as_opal_promise(`#{@native}.query(#{fn.to_n}, #{options.to_n})`) { |response|
+        $global.console.log "Got response!", response
+        AllDocuments.new(response)
+      }
     end
   end
 end
