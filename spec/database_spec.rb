@@ -60,7 +60,7 @@ describe PouchDB::Database do
         db.put(docs_with_ids.first).then do |created|
           update = { name: "Bananananas" }
 
-          db.put(update, id: created["id"], rev: created["rev"]).then do |updated|
+          db.put(update, doc_id: created["id"], doc_rev: created["rev"]).then do |updated|
             run_async do
               expect(updated["rev"]).not_to eq(created["rev"])
             end
