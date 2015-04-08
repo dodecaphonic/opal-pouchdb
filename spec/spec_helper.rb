@@ -1,5 +1,5 @@
 require "opal-rspec"
-require "pouchdb"
+require "opal-pouchdb"
 
 def with_new_database(add_failure_handler = true)
   database_name = "test_opal_pouchdb_database-#{rand(1337)}-#{rand(7331)}"
