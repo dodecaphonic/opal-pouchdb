@@ -262,5 +262,12 @@ module PouchDB
     def sync(other)
       EventEmitter.new(`#{@native}.sync(#{database_as_string(other)})`)
     end
+
+    # Get information about a database.
+    #
+    # @return [Promise]
+    def info
+      as_opal_promise(`#{@native}.info()`)
+    end
   end
 end
