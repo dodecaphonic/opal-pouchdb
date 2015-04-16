@@ -269,5 +269,16 @@ module PouchDB
     def info
       as_opal_promise(`#{@native}.info()`)
     end
+
+    # Cleans up any stale map/reduce indexes.
+    #
+    # As design docs are deleted or modified, their associated index files (in
+    # CouchDB) or companion databases (in local PouchDBs) continue to take up
+    # space on disk. view_cleanup removes these unnecessary index files.
+    #
+    # @return [Promise]
+    def view_cleanup
+      as_opal_promise(`#{@native}.viewCleanup()`)
+    end
   end
 end
