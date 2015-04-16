@@ -282,13 +282,13 @@ module PouchDB
     end
 
     # Triggers a compaction operation in the local or remote database. This
-    # reduces the database’s size by removing unused and old data, namely
+    # reduces the database's size by removing unused and old data, namely
     # non-leaf revisions and attachments that are no longer referenced by those
     # revisions. Note that this is a separate operation from view_cleanup.
     #
     # For remote databases, PouchDB checks the compaction status at regular
     # intervals and fires the callback (or resolves the promise) upon
-    # completion. Consult the compaction section of CouchDB’s maintenance
+    # completion. Consult the compaction section of CouchDB's maintenance
     # documentation for more details.
     #
     # Also see auto-compaction, which runs compaction automatically (local
@@ -298,8 +298,18 @@ module PouchDB
     # @option options [Fixnum] interval  Number of milliseconds to wait
     #   before asking again if compaction is already done. Defaults to 200.
     #   (Only applies to remote databases.)
+    # @return [Promise]
     def compact(options = {})
       as_opal_promise(`#{@native}.compact(#{options.to_n})`)
+    end
+
+    # Given a set of document/revision IDs, returns the subset of those that do
+    # not correspond to revisions stored in the database. Primarily used in
+    # replication.
+    #
+    # @return [Promise]
+    def revs_diff(diff)
+      as_opal_promise(`#{@native}.revsDiff(#{diff.to_n})`)
     end
   end
 end
