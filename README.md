@@ -32,11 +32,6 @@ Every single CRUD operation is supported right now:
 
 - Attachments
 - Querying
-- Views
-- Database info
-- Compaction
-- Revision diff
-- Events
 - Plugins
 - Debug mode
 
