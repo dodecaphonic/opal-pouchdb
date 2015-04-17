@@ -9,6 +9,8 @@ module PouchDB
   require "pouchdb/event_emitter"
   require "pouchdb/replication"
 
+  extend Conversion
+
   # Replicate data from source to target. Both the source and target can be a
   # PouchDB instance or a string representing a CouchDB database URL or the name
   # of a local PouchDB database. If `options.live` is true, then this will track
@@ -91,5 +93,21 @@ module PouchDB
     EventEmitter.new(`PouchDB.sync(#{s}, #{t}, #{options.to_n})`)
   end
 
-  extend Conversion
+  def self.on(event, &blk)
+    event_emitter.on(event, NOOP_CONVERSION, &blk)
+  end
+
+  def self.remove_listener(event, &blk)
+    event_emitter.remove_listener(event, NOOP_CONVERSION, &blk)
+  end
+
+  def self.remove_all_listeners(event)
+    event_emitter.remove_all_listeners(event)
+  end
+
+  private
+
+  def self.event_emitter
+    @event_emitter ||= EventEmitter.new(`PouchDB`)
+  end
 end
