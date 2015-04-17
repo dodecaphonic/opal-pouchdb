@@ -2,7 +2,7 @@ require "opal-rspec"
 require "opal-pouchdb"
 
 def with_new_database(add_failure_handler = true)
-  database_name = "test_opal_pouchdb_database-#{rand(1337)}-#{rand(7331)}"
+  database_name = random_database_name
   promise = yield PouchDB::Database.new(name: database_name)
 
   if add_failure_handler
@@ -16,6 +16,10 @@ def with_new_database(add_failure_handler = true)
   promise.always do
     destroy_database(database_name)
   end
+end
+
+def random_database_name
+  "test_opal_pouchdb_database-#{rand(1337)}-#{rand(7331)}"
 end
 
 def destroy_database(name)

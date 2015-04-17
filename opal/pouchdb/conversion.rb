@@ -7,7 +7,10 @@ module PouchDB
         Hash.new(response)
       end
     }
+
     ARRAY_CONVERSION = ->(response) { response.map { |o| OBJECT_CONVERSION.call(o) } }
+
+    NOOP_CONVERSION = ->(o) { o }
 
     def as_opal_promise(pouch_promise_n, &response_handler)
       pouch_promise = Native(pouch_promise_n)
